@@ -19,8 +19,9 @@ export default function CelestialScene({ calm, galaxy = false }: { calm: boolean
       renderer = new THREE.WebGLRenderer({ alpha: true, antialias: false, powerPreference: "low-power" });
     } catch { return; }
 
-    const small = window.matchMedia("(max-width: 700px)").matches;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, small ? 1.25 : 1.75));
+    const small = window.matchMedia("(max-width: 700px), (pointer: coarse)").matches;
+    // Retina tablets need the same GPU budget as phones, regardless of width.
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, small ? .85 : 1.5));
     renderer.setClearColor(0x000000, 0);
     element.appendChild(renderer.domElement);
     const scene = new THREE.Scene();
@@ -28,7 +29,7 @@ export default function CelestialScene({ calm, galaxy = false }: { calm: boolean
     camera.position.z = 9;
     const group = new THREE.Group();
     scene.add(group);
-    const count = small ? 260 : 620;
+    const count = small ? 140 : 620;
     const positions = new Float32Array(count * 3);
     const sizes = new Float32Array(count);
     const phases = new Float32Array(count);
@@ -121,6 +122,7 @@ export default function CelestialScene({ calm, galaxy = false }: { calm: boolean
     let burst = 0;
     let elapsed = 0;
     let last = 0;
+    let lastFrame = 0;
     let previousCalm = false;
     let previousGalaxy = false;
     let galaxyMix = 0;
@@ -142,6 +144,9 @@ export default function CelestialScene({ calm, galaxy = false }: { calm: boolean
     const celebrate = () => { if (!calmRef.current) burst = 1; };
     const render = (time: number) => {
       if (disposed || document.hidden) { last = time; return; }
+      // Ambient sky can run at 30fps while the scroll/couple stays at full rate.
+      if (small && time - lastFrame < 1000 / 30) return;
+      lastFrame = time;
       const isCalm = calmRef.current;
       if (isCalm && previousCalm && previousGalaxy === galaxyRef.current) { last = time; return; }
       const dt = Math.min((time - last) / 1000 || 0, .05);

@@ -9,11 +9,21 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 const CelestialScene = dynamic(() => import("./celestial-scene"), { ssr: false });
 
+let stableViewport = "";
+const getViewport = () => stableViewport || (stableViewport = `${window.innerWidth}:${window.innerHeight}`);
 const subscribeViewport = (callback: () => void) => {
-  window.addEventListener("resize", callback);
-  return () => window.removeEventListener("resize", callback);
+  const resize = () => {
+    const [width] = getViewport().split(":").map(Number);
+    // Safari's collapsing toolbar changes height during scroll. Rebuilding the
+    // whole GSAP scene for those events causes stutters and resets the story.
+    if (window.matchMedia("(pointer: coarse)").matches && width === window.innerWidth) return;
+    stableViewport = `${window.innerWidth}:${window.innerHeight}`;
+    callback();
+  };
+  window.addEventListener("resize", resize);
+  resize();
+  return () => window.removeEventListener("resize", resize);
 };
-const getViewport = () => `${window.innerWidth}:${window.innerHeight}`;
 const getServerViewport = () => "1440:1000";
 
 // Stable SVG serialization across JavaScript engines; subpixel precision is ample.

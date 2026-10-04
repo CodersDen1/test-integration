@@ -605,3 +605,21 @@ blockquote { font-size: clamp(28px, 3vw, 41px); line-height: 1.35; margin: 20px 
 
 .music-toggle.music-playing { color: #e8bfcf; border-color: #e8bfcf40; background: #e8bfcf08; }
 @media (max-width: 380px) { .story-header-note { display: none; } .story-header .brand { margin-right: auto; } }
+
+/* Touch GPUs: preserve the story motion without repainting large blur surfaces. */
+@media (pointer: coarse), (max-width: 700px) {
+  .landscape-foreground, .story-couple, .landscape-couple,
+  .walking-couple, .landscape-scene-moon circle,
+  .hero-copy, .hero-char, .moon-reveal, .story-question,
+  .landscape-quotes blockquote, .intro-aperture span,
+  .hero-eyebrow, .hero-copy > p, .hero-cta, .hero-footnote {
+    filter: none !important;
+  }
+  .dream-bubble, .orbit-note { backdrop-filter: none; }
+  .tree-canopy { animation: none; }
+  .tree-canopy ellipse:not(:nth-of-type(4n)) { display: none; }
+  .scene-firefly:nth-child(2n), .sky-star:nth-child(2n) { display: none; }
+  .scene-firefly circle[filter] { display: none; }
+  .crescent { filter: none; animation: none; }
+  .moon-halo { filter: none; }
+}
