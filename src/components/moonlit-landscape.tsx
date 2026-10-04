@@ -63,9 +63,11 @@ export default function MoonlitLandscape({ calm, accepted, onExitEnding, childre
       ScrollTrigger.addEventListener("refreshInit", updateMoonDestination);
       const question = root.current!.querySelector<HTMLElement>(".story-question")!;
       const quoteNodes = Array.from(root.current!.querySelectorAll<HTMLElement>(".landscape-quotes blockquote"));
+      // Only one quote may occupy this shared text area, including fast reverse scrolls.
+      gsap.set(quoteNodes, { autoAlpha: 0 });
       const quoteReveals = quoteNodes.map((quote) => gsap.timeline({ paused: true }).fromTo(quote,
-        { opacity: 0, filter: "blur(10px)", clipPath: "inset(0 100% 0 0)" },
-        { opacity: 1, filter: "blur(0px)", clipPath: "inset(0 0% 0 0)", duration: .75, ease: "power3.out", immediateRender: false }
+        { autoAlpha: 0, filter: "blur(10px)", clipPath: "inset(0 100% 0 0)" },
+        { autoAlpha: 1, filter: "blur(0px)", clipPath: "inset(0 0% 0 0)", duration: .75, ease: "power3.out", immediateRender: false }
       ));
       quoteReveals[0].progress(1).pause();
       let currentQuote = 0;
@@ -85,7 +87,10 @@ export default function MoonlitLandscape({ calm, accepted, onExitEnding, childre
           }
           const nextQuote = progress < .2 ? 0 : progress < .43 ? 1 : progress < .65 ? 2 : 3;
           if (nextQuote !== currentQuote) {
-            quoteReveals[currentQuote].reverse();
+            // Reversing the outgoing reveal crossfades full sentences on top of
+            // each other. Reset every reveal before starting the incoming one.
+            quoteReveals.forEach((reveal) => reveal.pause(0));
+            gsap.set(quoteNodes, { autoAlpha: 0 });
             quoteReveals[nextQuote].restart();
             currentQuote = nextQuote;
           }
@@ -143,7 +148,7 @@ export default function MoonlitLandscape({ calm, accepted, onExitEnding, childre
     <div className="landscape-sticky">
       <div className="story-opening">{opening}</div>
       <svg className="landscape-art" viewBox={sceneViewBox} preserveAspectRatio="xMidYMid slice" role="img" aria-labelledby="landscape-description">
-        <title id="landscape-description">A boy and a girl sit close together beneath a leafy tree beside a quiet lake, while a crescent moon becomes full above the mountains.</title>
+        <desc id="landscape-description">A boy and a girl sit close together beneath a leafy tree beside a quiet lake, while a crescent moon becomes full above the mountains.</desc>
         <defs>
           <linearGradient id="land-sky" x2="0" y2="1"><stop stopColor="#0d0b1c"/><stop offset=".55" stopColor="#32213e"/><stop offset="1" stopColor="#97728e"/></linearGradient>
           <linearGradient id="land-water" x2="0" y2="1"><stop stopColor="#61506f"/><stop offset=".5" stopColor="#262039"/><stop offset="1" stopColor="#100f20"/></linearGradient>
@@ -161,10 +166,10 @@ export default function MoonlitLandscape({ calm, accepted, onExitEnding, childre
         <ellipse className="landscape-moon-glow" cx="670" cy="380" rx="370" ry="300" fill="url(#land-glow)"/>
         <g className="landscape-scene-moon" mask="url(#land-phase)"><circle cx="670" cy="380" r="83" fill="url(#land-moon)"/><circle cx="670" cy="380" r="83" fill="url(#land-moon)" filter="url(#land-moon-texture)" opacity=".28"/></g>
         <g fill="#8e688d" opacity=".1" filter="url(#land-soft)"><ellipse cx="400" cy="526" rx="310" ry="24"/><ellipse cx="1190" cy="571" rx="400" ry="20"/></g>
-        <g className="landscape-mountains"><path d="M0 640 100 589 188 610 296 490 362 543 430 517 555 627 674 565 793 643 927 588 1075 514 1190 552 1310 478 1475 612 1600 561V800H0Z" fill="#4b3a59"/>
+        <g className="landscape-mountains"><path d="M0 640 100 589 188 610 296 490 362 543 430 517 555 627 674 565 793 643 927 588 1075 514 1190 552 1310 478 1475 612 1600 561 1700 523 1820 595V800H0Z" fill="#4b3a59"/>
         <path d="m230 550 66-60 66 53-55-20-29 10Z M1050 536l25-22 115 38-93-16-26 12Z M1265 515l45-37 66 56-60-24-19 12Z" fill="#b5a0bc" opacity=".2"/>
-        <path d="M0 672 170 609 330 658 464 593 617 673 817 617 930 670 1129 604 1290 652 1470 590 1600 655V810H0Z" fill="#332b44"/>
-        <path d="M0 701q173-43 357-11t323 4 345-15 335 14 240-22V810H0Z" fill="#25243a"/>
+        <path d="M0 672 170 609 330 658 464 593 617 673 817 617 930 670 1129 604 1290 652 1470 590 1600 655 1710 605 1820 662V810H0Z" fill="#332b44"/>
+        <path d="M0 701q173-43 357-11t323 4 345-15 335 14 240-22q110-24 220 8V810H0Z" fill="#25243a"/>
         </g><rect y="708" width="1600" height="292" fill="url(#land-water)"/>
         <path d="M0 710q370 4 720 0t880 1" fill="none" stroke="#d5adc8" strokeOpacity=".2"/>
         <g className="moon-reflection">
